@@ -7,6 +7,8 @@ import Stripe from "stripe";
 import { stripe } from "../../lib/stripe";
 import axios from "axios";
 import Head from "next/head";
+import { Header } from "../../components/Header";
+import { CartComponent } from "../../components/CartComponent";
 
 interface ProductProps {
   product: {
@@ -22,6 +24,7 @@ interface ProductProps {
 export default function Product({product} : ProductProps) {
   const [isCreatingCheckoutSession, setIsCreatingCheckoutSession] = useState(false);
 
+  const [showCart , setShowCart] = useState(false)
   async function handleBuyButton() {
      try {
       setIsCreatingCheckoutSession(true);
@@ -34,6 +37,7 @@ export default function Product({product} : ProductProps) {
 
       window.location.href = checkoutUrl;
     } catch (err) {
+      console.log(err)
       setIsCreatingCheckoutSession(false);
 
       alert('Falha ao redirecionar ao checkout!')
@@ -45,6 +49,7 @@ export default function Product({product} : ProductProps) {
       <Head>
         <title>{product.name} | Ignite Shop</title>
       </Head>
+      <Header setShowCart={setShowCart}/>
       <ProductContainer>
         <ImageContainer>
           <Image src={product.imageUrl} width={520} height={480} alt="" />
@@ -57,10 +62,13 @@ export default function Product({product} : ProductProps) {
           <p>{product.description}</p>
 
           <button disabled={isCreatingCheckoutSession} onClick={handleBuyButton}>
-            Comprar agora
+            Colocar na sacola
           </button>
         </ProductDetails>
       </ProductContainer>
+      {showCart && (
+        <CartComponent setShowCart={setShowCart}/>
+      )}
     </>
   )
 }
