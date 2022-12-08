@@ -58,7 +58,7 @@ export const CartItemContent = styled('div', {
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-
+        width: '100%',
         label: {
             fontSize: '18px',
             color: '$gray300'
@@ -82,7 +82,9 @@ export const CartItemContent = styled('div', {
         },
         div: {
             display: 'flex',
-            justifyContent: 'space-between'
+            justifyContent: 'space-between',
+
+
         }
     }
 })

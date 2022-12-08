@@ -5,7 +5,6 @@ import { useState } from "react";
 import Image from "next/image";
 import Stripe from "stripe";
 import { stripe } from "../../lib/stripe";
-import axios from "axios";
 import Head from "next/head";
 import { Header } from "../../components/Header";
 import { CartComponent } from "../../components/CartComponent";

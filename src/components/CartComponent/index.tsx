@@ -10,6 +10,7 @@ import {CartComponentBox ,
 import {useShoppingCart } from 'use-shopping-cart'
 import {formatCurrencyString } from 'use-shopping-cart/core'
 import { useState, useEffect } from 'react'
+import axios from "axios";
 
 interface CartComponentProps {
     setShowCart: (showCart : boolean) => void
@@ -58,8 +59,18 @@ export function CartComponent({setShowCart, showCart} : CartComponentProps) {
         
     }
 
-    const handleFinishTransaction = () => {
-        
+    const handleFinishTransaction = async() => {
+        const productsToSendToCheckout = cart.map(cartItem => {
+            return {
+                price: cartItem.priceId,
+                quantity: cartItem.quantity
+            }
+        })
+        const response = await axios.post('/api/checkout', productsToSendToCheckout)
+    
+          const { checkoutUrl } = response.data;
+    
+          window.location.href = checkoutUrl;
     }
 
     return(
