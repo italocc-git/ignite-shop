@@ -9,39 +9,61 @@ import axios from "axios";
 import Head from "next/head";
 import { Header } from "../../components/Header";
 import { CartComponent } from "../../components/CartComponent";
-
+import {useShoppingCart} from 'use-shopping-cart'
 interface ProductProps {
   product: {
     id: string
     name: string
     imageUrl: string
-    price: string
+    price: {
+      unit_amount : number
+      currency: string
+    },
+    priceFormatted: string
     description: string
     defaultPriceId: string
   }
 }
 
 export default function Product({product} : ProductProps) {
-  const [isCreatingCheckoutSession, setIsCreatingCheckoutSession] = useState(false);
-
+  
+  const {addItem} = useShoppingCart()
   const [showCart , setShowCart] = useState(false)
   async function handleBuyButton() {
      try {
-      setIsCreatingCheckoutSession(true);
+      
 
-      const response = await axios.post('/api/checkout', {
+       const itemAdded = await addItem(
+        {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          currency: 'BRL',
+          image: product.imageUrl,
+          price: product.price.unit_amount,
+          price_id: product.defaultPriceId,
+          
+        },{
+          count: 1,
+          product_metadata: { type: 'shirt'},
+          price_metadata: {type: 'R$', formattedValue: product.priceFormatted }
+        }
+      ) 
+       console.log(itemAdded) 
+      /* const response = await axios.post('/api/checkout', {
         priceId: product.defaultPriceId,
       })
 
       const { checkoutUrl } = response.data;
 
-      window.location.href = checkoutUrl;
+      window.location.href = checkoutUrl; */
     } catch (err) {
       console.log(err)
-      setIsCreatingCheckoutSession(false);
+      
 
       alert('Falha ao redirecionar ao checkout!')
     }
+    
   }
   
   return (
@@ -57,17 +79,17 @@ export default function Product({product} : ProductProps) {
 
         <ProductDetails>
           <h1>{product.name}</h1>
-          <span>{product.price}</span>
+          <span>{product.priceFormatted}</span>
 
           <p>{product.description}</p>
 
-          <button disabled={isCreatingCheckoutSession} onClick={handleBuyButton}>
+          <button  onClick={handleBuyButton}>
             Colocar na sacola
           </button>
         </ProductDetails>
       </ProductContainer>
       {showCart && (
-        <CartComponent setShowCart={setShowCart}/>
+        <CartComponent setShowCart={setShowCart} showCart={showCart}/>
       )}
     </>
   )
@@ -78,8 +100,9 @@ export const getStaticPaths : GetStaticPaths = async() => {
   return {
     paths: [
       {
-        params: { id : 'prod_MmF2cmnbqKag3P'} /* Só funciona na build, carrega mais rápido. Ex: páginas mais acessadas  */
+        params: { id : 'prod_MmF2cmnbqKag3P'}
       }
+       // Só funciona na build, carrega mais rápido. Ex: páginas mais acessadas  
     ],
     fallback: 'blocking'
   }
@@ -94,14 +117,15 @@ export const getStaticProps: GetStaticProps<any, { id: string }> = async ({ para
   });
 
   const price = product.default_price as Stripe.Price;
-
+  
   return {
     props: {
       product: {
         id: product.id,
         name: product.name,
         imageUrl: product.images[0],
-        price: new Intl.NumberFormat('pt-BR', {
+        price,
+        priceFormatted: new Intl.NumberFormat('pt-BR', {
           style: 'currency',
           currency: 'BRL'
         }).format((price.unit_amount ?? 0) / 100),

@@ -79,6 +79,10 @@ export const CartItemContent = styled('div', {
             '&:hover': {
                 color: '$green300'
             }
+        },
+        div: {
+            display: 'flex',
+            justifyContent: 'space-between'
         }
     }
 })

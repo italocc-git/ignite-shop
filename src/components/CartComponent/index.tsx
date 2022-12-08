@@ -1,20 +1,67 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import {X} from 'phosphor-react'
-import camiseta1 from '../../assets/camisetas/1.png'
-import camiseta2 from '../../assets/camisetas/2.png'
 import {CartComponentBox ,
      CartComponentBagContainer ,
      CartContent,
      CartItemContent,
      CartComponentBagFooter
 } from '../../styles/components/Cart'
+import {useShoppingCart } from 'use-shopping-cart'
+import {formatCurrencyString } from 'use-shopping-cart/core'
+import { useState, useEffect } from 'react'
 
 interface CartComponentProps {
     setShowCart: (showCart : boolean) => void
+    showCart : boolean
 }
 
-export function CartComponent({setShowCart} : CartComponentProps) {
+interface Cart {
+    product_id : string;
+    image : string;
+    productName: string;
+    price : string
+    priceId: string
+    quantity: number
+}
+
+export function CartComponent({setShowCart, showCart} : CartComponentProps) {
+    const {cartDetails, totalPrice, removeItem } = useShoppingCart()
+    const [cart , setCart] = useState<Cart[]>([])
+    useEffect(() => {
+        if(!cartDetails)
+        return 
+        console.log(cartDetails)
+        const cart = Object.entries(cartDetails).map(([key,value]) => {
+            
+            return {
+                product_id: key,
+                image: value.image ?? '',
+                productName: value.name,
+                price: formatCurrencyString({ value: value.price, currency: value.currency}),
+                quantity: value.quantity,
+                priceId: value.price_id
+                
+            }
+        })
+        
+        setCart(cart)
+
+    },[showCart, cartDetails])
+
+    const handleRemoveItem = (productId: string) => {
+        if(productId) {
+            setCart(cart.filter(item => item.product_id !== productId))
+            removeItem(productId)
+        }
+        /* Pensar melhor .. */
+        
+    }
+
+    const handleFinishTransaction = () => {
+        
+    }
+
     return(
         <CartComponentBox>
             <header>
@@ -25,26 +72,22 @@ export function CartComponent({setShowCart} : CartComponentProps) {
                     <h1>Sacola de compras</h1>
 
                     <CartContent>
-                        <CartItemContent>
-                            <Image src={camiseta1} width={101} height={93} alt=''  />
+                        {cart && cart.map(cartItem => (
+                            <CartItemContent key={cartItem.product_id}>
+                            <Image src={cartItem.image} width={101} height={93} alt=''  />
                             <div className='cart-item-detail'>
-                                <label>Camiseta Beyond the Limits</label>
-                                <b>R$ 79,90</b>
-                                <Link  href=''>
-                                    Remover
-                                </Link>
+                                <label>{cartItem.productName}</label>
+                                <b>{cartItem.price}</b>
+                                <div >
+                                    <i>{cartItem.quantity === 1 ? `${cartItem.quantity} item `: `${cartItem.quantity} itens`} </i>
+                                    <Link  href='/' onClick={() => removeItem(cartItem.product_id)}>
+                                        Remover
+                                    </Link>
+                                </div>
                             </div>
                         </CartItemContent>
-                        <CartItemContent>
-                            <Image src={camiseta2} width={101} height={93} alt=''  />
-                            <div className='cart-item-detail'>
-                                <label>Camiseta Explorer</label>
-                                <b>R$ 61,90</b>
-                                <Link href=''>
-                                    Remover
-                                </Link>
-                            </div>
-                        </CartItemContent>
+                        ))}
+                        
                     </CartContent>
                 </main>
                 
@@ -53,14 +96,14 @@ export function CartComponent({setShowCart} : CartComponentProps) {
             <CartComponentBagFooter>
                     <div className='quantity-items'>
                         <span>Quantidade</span>
-                        <span>2 itens</span>
+                        <span>{cart.length === 1 ? `${cart.length} item `: `${cart.length} itens`}</span>
                     </div>
                     <div className='total-value'>
                         <span>Valor total</span>
-                        <span>R$ 270,00</span>
+                        <span>{formatCurrencyString({value:totalPrice ?? 0 , currency: 'BRL'})}</span>
                     </div>
 
-                    <button>Finalizar compra</button>
+                    <button onClick={handleFinishTransaction}>Finalizar compra</button>
                 </CartComponentBagFooter>
         </CartComponentBox>
     )
